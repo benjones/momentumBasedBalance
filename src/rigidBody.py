@@ -47,10 +47,10 @@ class RigidBody:
         
         self.theta += thetaDot*dt
         
-        self.p[0] += pdot[0]
-        self.p[1] += pdot[1]
+        self.p[0] += pdot[0]*dt
+        self.p[1] += pdot[1]*dt
 
-        self.L += ldot
+        self.L += ldot*dt
 
     def draw(self):
         glMatrixMode(GL_MODELVIEW)
