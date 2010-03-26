@@ -1,7 +1,11 @@
 #!/usr/bin/python
 
 from OpenGL.GL import *
+import glHelp
+import math
 
+def radians(degrees):
+    return degrees * math.pi/180.0
 
 class RigidBody:
 
@@ -19,10 +23,10 @@ class RigidBody:
         self.torques = []
 
     def addForce(self, f, pos):
-        'add force f at position p in local coordinates (0 is COM)'
-        self.forces.append(f)
+        'add force (global coordinates) f at position p in local coordinates (0 is COM)'
+        self.forces.append((f, pos))
         #t = r x f
-        self.torques.append(pos[0]*f[1] - pos[1]*f[0])
+
         
     def clearForces(self):
         self.forces = []
@@ -34,12 +38,20 @@ class RigidBody:
         posDot[1] = self.p[1]/self.mass
         thetaDot = self.L/self.I
         pdot = [0.0,0.0]
-        for force in self.forces:
-            pdot[0] += force[0]
-            pdot[1] += force[1]
         ldot = 0.0
-        for torque in self.torques:
-            ldot += torque
+        for force in self.forces:
+            pdot[0] += force[0][0]
+            pdot[1] += force[0][1]
+        
+            #convert local displacement to global vector
+            #and compute r x f
+            newVec = [0,0]
+            #rotate by theta
+            newVec[0] = force[1][0]*math.cos(radians(self.theta)) -force[1][1]*math.sin(radians(self.theta))
+            newVec[1] = force[1][0]*math.sin(radians(self.theta)) + force[1][1]*math.cos(radians(self.theta))
+            
+            #now compute cross product with newVec
+            ldot += newVec[0]*force[0][1] - newVec[1]*force[0][0]
 
         #just do euler integration
         self.pos[0] += posDot[0]*dt
@@ -71,12 +83,17 @@ class RigidBody:
                  self.pos[1] - self.shape[1]/2.0)
 
         glEnd()
-        
+
+
+
+        glPopMatrix()
+        for force in self.forces:
+            fpos = (self.pos[0] + force[1][0]*math.cos(radians(self.theta)) - force[1][1]*math.sin(radians(self.theta)),
+                    self.pos[1] + force[1][0]*math.sin(radians(self.theta)) + force[1][1]*math.cos(radians(self.theta)))
+            glHelp.drawArrow(force[0], fpos)
         glBegin(GL_POINTS)
         glVertex(self.pos[0], self.pos[1])
         glEnd()
-
-        glPopMatrix()
 
 
 
