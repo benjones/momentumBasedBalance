@@ -10,7 +10,7 @@ def radians(degrees):
 class RigidBody:
 
 
-    def __init__(self,mass = 1, momInertia = 1, pos = (0,0), momentum = (0,0), theta = 0, angMom = 0, shape=(10, 10)):
+    def __init__(self,mass = 1, momInertia = 1, pos = (0,0), momentum = (0,0), theta = 0, angMom = 0, shape=(10, 10), grounded = False):
         self.mass = mass
         self.I = momInertia
         self.pos = list(pos)
@@ -21,11 +21,21 @@ class RigidBody:
 
         self.forces = []
         self.torques = []
+        self.grounded = grounded
 
     def addForce(self, f, pos):
         'add force (global coordinates) f at position p in local coordinates (0 is COM)'
         self.forces.append((f, pos))
         #t = r x f
+
+    def getBottom(self):
+        corners = ((self.shape[0]/2., self.shape[1]/2.),
+                   (self.shape[0]/2., -self.shape[1]/2.),
+                   (-self.shape[0]/2., - self.shape[1]/2.),
+                   (-self.shape[0]/2., self.shape[1]/2.))
+        return min(
+            self.pos[1] + corner[0]*math.cos(radians(self.theta)) + corner[1]*math.sin(radians(self.theta)) 
+            for corner in corners)
 
         
     def clearForces(self):

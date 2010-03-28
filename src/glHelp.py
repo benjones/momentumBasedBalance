@@ -30,8 +30,8 @@ def setupGL(windowSize, worldSize, drawFunc, glutArgs = []):
 
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
-    glTranslate(-1, -1, 0)
-    glScalef(2.0/worldSize[0], 2.0/worldSize[1], 1)
+    glTranslate(-1, -.95, 0)
+    glScalef(2.0/worldSize[0], 1.95/worldSize[1], 1)
 
 def drawArrow(magnitude, position):
     #scale, rotate, translate
