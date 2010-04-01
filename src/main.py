@@ -15,6 +15,12 @@ ESCAPE_KEY = '\033'
 windowSize = (800, 800)
 worldSize = (100, 100)
 
+displayFramerate = 60 #fps
+simulationFramerate = 500 #fps
+
+stepsPerFrame = float(simulationFramerate)/displayFramerate
+
+simulationTime = time.time()
 
 def keyCallback(key, x, y):
     global paused, ESCAPE_KEY
@@ -41,26 +47,35 @@ def draw():
         glEnd()'''
     glFlush()
     glutSwapBuffers()
-    time.sleep(.1)
-frames = 0
-dt = .0001
+    #time.sleep(.1)
+
+#dt = .0001
+dt = 1.0/simulationFramerate
 def idleFunc():
-    global frames, dt, bodies, paused
+    global frames, dt, bodies, paused, simulationTime
     if paused:
         time.sleep(.1)
         return
-    frames += 1
-
-    for body in bodies:
+    frames = 0
+    simulationTime = time.time()
+    print stepsPerFrame
+    while frames < stepsPerFrame:
         
-        if not body.grounded and body.getBottom() <= 0.:
-            glutPostRedisplay()
-            return
-        body.step(dt)
 
+        for body in bodies:
+        
+            if not body.grounded and body.getBottom() <= 0.:
+                glutPostRedisplay()
+                return
+            body.step(dt)
+        frames += 1
+    #wait until its time to update
+    delta = time.time() - simulationTime
+    while delta < 1.0/displayFramerate:
+        time.sleep(delta)
+        delta = time.time() - simulationTime
 
-    if frames % 100 == 0:
-        glutPostRedisplay()
+    glutPostRedisplay()
 glHelp.setupGL(windowSize, worldSize, draw)
 
 glutIdleFunc(idleFunc)
