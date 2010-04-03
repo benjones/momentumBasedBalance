@@ -16,7 +16,7 @@ windowSize = (800, 800)
 worldSize = (100, 100)
 
 displayFramerate = 60 #fps
-simulationFramerate = 500 #fps
+simulationFramerate = 600 #fps
 
 stepsPerFrame = float(simulationFramerate)/displayFramerate
 
@@ -58,14 +58,14 @@ def idleFunc():
         return
     frames = 0
     simulationTime = time.time()
-    print stepsPerFrame
+    #print stepsPerFrame
     while frames < stepsPerFrame:
         
 
         for body in bodies:
         
             if not body.grounded and body.getBottom() <= 0.:
-                glutPostRedisplay()
+                #glutPostRedisplay()
                 return
             body.step(dt)
         frames += 1
@@ -80,10 +80,11 @@ glHelp.setupGL(windowSize, worldSize, draw)
 
 glutIdleFunc(idleFunc)
 glutKeyboardFunc(keyCallback)
-x = RigidBody(1, 1, (50, 70))
-x.addForce([0, -20],[4,5])
+x = RigidBody(1,  (50, 70))
+x.addForce([0, -20],[5,5])
+x.addForce([0, 10],[-5, -5])
 x.grounded = True
-y = RigidBody(1, 1, (20, 80))
+y = RigidBody(1,  (20, 80))
 y.addForce([3, -10],[0,0])
 bodies = [x, y]
 
