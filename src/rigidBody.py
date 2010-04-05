@@ -10,7 +10,10 @@ def radians(degrees):
 class RigidBody:
 
 
-    def __init__(self,mass = 1, pos = (0,0), momentum = (0,0), theta = 0, angMom = 0, shape=(10, 10), grounded = False):
+    def __init__(self,mass = 1, pos = (0,0), 
+                 momentum = (0,0), theta = 0, 
+                 angMom = 0, shape=(10, 10), 
+                 grounded = False):
         self.mass = mass
         self.pos = list(pos)
         self.p = list(momentum)
@@ -75,7 +78,7 @@ class RigidBody:
 
         self.L += ldot*dt
 
-    def draw(self):
+    def draw(self, scale = None):
         glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
 
@@ -101,7 +104,7 @@ class RigidBody:
         for force in self.forces:
             fpos = (self.pos[0] + force[1][0]*math.cos(radians(self.theta)) - force[1][1]*math.sin(radians(self.theta)),
                     self.pos[1] + force[1][0]*math.sin(radians(self.theta)) + force[1][1]*math.cos(radians(self.theta)))
-            glHelp.drawArrow(force[0], fpos)
+            glHelp.drawArrow(force[0], fpos, scale)
         glBegin(GL_POINTS)
         glVertex(self.pos[0], self.pos[1])
         glEnd()

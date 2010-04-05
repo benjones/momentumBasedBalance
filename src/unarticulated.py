@@ -28,6 +28,8 @@ def keyCallback(key, x, y):
         sys.exit()
     elif key == ' ':
         paused = not paused
+    elif key == 'r':
+        setupObjects()
 def draw():
     global bodies, worldSize
     glClear(GL_COLOR_BUFFER_BIT)
@@ -68,7 +70,7 @@ def idleFunc():
                 #glutPostRedisplay()
                 return
             body.step(dt)
-        frames += 1
+        frames += 1              
     #wait until its time to update
     delta = time.time() - simulationTime
     while delta < 1.0/displayFramerate:
@@ -76,16 +78,22 @@ def idleFunc():
         delta = time.time() - simulationTime
 
     glutPostRedisplay()
+
+def setupObjects():
+    global bodies
+    x = RigidBody(1,  (50, 70))
+    x.addForce([0, -20],[5,5])
+    x.addForce([0, 10],[-5, -5])
+    x.grounded = True
+    y = RigidBody(1,  (20, 80))
+    y.addForce([3, -10],[0,0])
+    bodies = [x, y]
+    
+
 glHelp.setupGL(windowSize, worldSize, draw)
 
 glutIdleFunc(idleFunc)
 glutKeyboardFunc(keyCallback)
-x = RigidBody(1,  (50, 70))
-x.addForce([0, -20],[5,5])
-x.addForce([0, 10],[-5, -5])
-x.grounded = True
-y = RigidBody(1,  (20, 80))
-y.addForce([3, -10],[0,0])
-bodies = [x, y]
 
+setupObjects()
 glutMainLoop()
