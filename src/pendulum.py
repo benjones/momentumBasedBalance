@@ -15,7 +15,7 @@ paused = False
 ESCAPE_KEY = '\033'
 
 windowSize = (800, 800)
-worldSize = (10.0, 10.0)
+worldSize = (40.0, 40.0)
 
 displayFramerate = 60.0 #fps
 simulationFramerate = 600.0 #fps
@@ -57,20 +57,37 @@ def computeForces():
     Amat = np.copy(stencilMat)
     
     stencilMat[0,2] = -rg[1]
-    stencilMat[1,3] = rg[0]
+    stencilMat[1,2] = rg[0]
     stencilMat[4, 3:] = np.array([[-rg[1], rg[0]]])
     
     print Amat
     b = np.zeros((5,1))
+
+    omega = bodies[0].L/bodies[0].I
+
+    print "Expected omega: ", omega
+
+    b[0,0] = omega**2 * rg[0]
+    b[1,0] = omega**2 * rg[1]
+
     b[3,0] = mass*gravity[1]
     
     print b
 
     soln  = np.linalg.solve(Amat, b)
     print soln
-    bodies[0].addForce(gravity, (0.0,0.0))
+    gforce = [comp*bodies[0].mass for comp in gravity] 
+    bodies[0].addForce(gforce, (0.0,0.0))
     bodies[0].addForce(tuple(soln[3:]), r)
-    
+    print soln[0,0], soln[1,0], soln[2,0], omega, rg
+    print -soln[2,0]*rg[1], -(omega**2) *rg[0]
+    print -soln[2,0]*rg[0], -(omega**2)* rg[1]
+    pointAccel = [
+        soln[0,0] - soln[2,0]*rg[1] - (omega**2) * rg[0],
+        soln[1,0] + soln[2,0]*rg[0] - (omega**2) * rg[1]
+        ]
+    print("Expected point acceleration: %s" % pointAccel)
+
 def keyCallback(key, x, y):
     global paused, ESCAPE_KEY
     if key == ESCAPE_KEY:
@@ -130,7 +147,7 @@ def idleFunc():
 
 def setupObjects():
     global bodies, stencilMat
-    x = RigidBody(mass, (5.0,5.0),  shape=size, theta=initAngle)
+    x = RigidBody(mass, (10.0,30.0),  shape=size, theta=initAngle)
     bodies = [x]
     stencilMat[2, 0] = x.mass
     stencilMat[3,1] = x.mass
