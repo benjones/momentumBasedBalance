@@ -15,7 +15,7 @@ paused = False
 ESCAPE_KEY = '\033'
 
 windowSize = (800, 800)
-worldSize = (40.0, 40.0)
+worldSize = (10.0, 10.0)
 
 displayFramerate = 60.0 #fps
 simulationFramerate = 600.0 #fps
@@ -30,7 +30,7 @@ simulationTime = time.time()
 size = (2.0, 1.0)
 mass = 3.0
 initAngle = 45.0
-initPosition = (20.0, 35.0)
+initPosition = (5.0, 7.0)
 r = (-size[0]/2.0, -size[1]/2.0)#local vector, global computed each step
 
 gravity = (0, -9.81)
@@ -53,7 +53,7 @@ def computeForces():
            r[0]*math.sin(radians(bodies[0].theta)) +
            r[1]*math.cos(radians(bodies[0].theta))]
     
-    print rg
+    #print rg
 
     Amat = np.copy(stencilMat)
     
@@ -62,37 +62,36 @@ def computeForces():
     Amat[3,2] = rg[1]
     Amat[4,2] = -rg[0]
     
-    print Amat
+    #print Amat
     b = np.zeros((5,1))
 
     omega = bodies[0].L/bodies[0].I
-
-    print "Expected omega: ", omega
+    
 
     b[1,0] = mass*gravity[1]
-    b[3,0] = omega**2 * rg[0]
-    b[4,0] = omega**2 * rg[1]
+    b[3,0] = -(omega**2 * rg[0])
+    b[4,0] = -(omega**2 * rg[1])
 
 
     
-    print b
+    #print b
 
     soln  = np.linalg.solve(Amat, b)
-    print soln
-    print np.dot(Amat,soln)
+    #print soln
+    #print np.dot(Amat,soln)
 
 
     gforce = [comp*bodies[0].mass for comp in gravity] 
     bodies[0].addForce(gforce, (0.0,0.0))
     bodies[0].addForce(tuple(soln[3:]), r)
-    print soln[0,0], soln[1,0], soln[2,0], omega, rg
-    print -soln[2,0]*rg[1], -(omega**2) *rg[0]
-    print -soln[2,0]*rg[0], -(omega**2)* rg[1]
-    pointAccel = [
-        soln[0,0] - soln[2,0]*rg[1] - (omega**2) * rg[0],
-        soln[1,0] + soln[2,0]*rg[0] - (omega**2) * rg[1]
-        ]
-    print("Expected point acceleration: %s" % pointAccel)
+    #print soln[0,0], soln[1,0], soln[2,0], omega, rg
+    #print -soln[2,0]*rg[1], -(omega**2) *rg[0]
+    #print -soln[2,0]*rg[0], -(omega**2)* rg[1]
+    #pointAccel = [
+    #    soln[0,0] - soln[2,0]*rg[1] - (omega**2) * rg[0],
+    #    soln[1,0] + soln[2,0]*rg[0] - (omega**2) * rg[1]
+    #    ]
+    #print("Expected point acceleration: %s" % pointAccel)
 
 def keyCallback(key, x, y):
     global paused, ESCAPE_KEY
