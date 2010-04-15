@@ -7,6 +7,9 @@ import math
 def radians(degrees):
     return degrees * math.pi/180.0
 
+def degrees(radians):
+    return radians * 180.0/math.pi
+
 class RigidBody:
 
 
@@ -47,9 +50,8 @@ class RigidBody:
         self.torques = []
 
     def step(self, dt):
-        posDot = [0,0]
-        posDot[0] = self.p[0]/self.mass
-        posDot[1] = self.p[1]/self.mass
+        posDot =  [self.p[0]/self.mass,
+                self.p[1]/self.mass]
         thetaDot = self.L/self.I
         pdot = [0.0,0.0]
         ldot = 0.0
@@ -70,6 +72,7 @@ class RigidBody:
             print "newVec: ", newVec
             #now compute cross product with newVec
             ldot += newVec[0]*force[0][1] - newVec[1]*force[0][0]
+            print ("Computed torque is: ", newVec[0]*force[0][1] - newVec[1]*force[0][0])
 
         #just do euler integration
         print "Total force/m: (%s, %s)" %  (pdot[0]/self.mass,
@@ -79,7 +82,7 @@ class RigidBody:
         self.pos[0] += posDot[0]*dt
         self.pos[1] += posDot[1]*dt
         
-        self.theta += thetaDot*dt
+        self.theta += degrees(thetaDot*dt)
         
         self.p[0] += pdot[0]*dt
         self.p[1] += pdot[1]*dt

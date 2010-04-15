@@ -30,16 +30,17 @@ simulationTime = time.time()
 size = (2.0, 1.0)
 mass = 3.0
 initAngle = 45.0
+initPosition = (20.0, 35.0)
 r = (-size[0]/2.0, -size[1]/2.0)#local vector, global computed each step
 
 gravity = (0, -9.81)
 
 stencilMat = np.matrix([
-        [1.0, 0.0, 0, 0, 0],
-        [0, 1, 0, 0, 0],
-        [0, 0, 0, -1,0],
-        [0, 0, 0, 0, -1],
-        [0, 0, 0, 0, 0]
+        [0.0, 0.0, 0.0, -1.0, 0.0],
+        [0.0, 0.0, 0.0, 0.0, -1.0],
+        [0.0, 0.0, 0.0, 0.0, 0.0],
+        [-1.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, -1.0, 0.0, 0.0, 0.0]
 ])
 
 def computeForces():
@@ -56,9 +57,10 @@ def computeForces():
 
     Amat = np.copy(stencilMat)
     
-    stencilMat[0,2] = -rg[1]
-    stencilMat[1,2] = rg[0]
-    stencilMat[4, 3:] = np.array([[-rg[1], rg[0]]])
+    Amat[2,3] = rg[1]
+    Amat[2,4] = -rg[0]
+    Amat[3,2] = rg[1]
+    Amat[4,2] = -rg[0]
     
     print Amat
     b = np.zeros((5,1))
@@ -67,15 +69,19 @@ def computeForces():
 
     print "Expected omega: ", omega
 
-    b[0,0] = omega**2 * rg[0]
-    b[1,0] = omega**2 * rg[1]
+    b[1,0] = mass*gravity[1]
+    b[3,0] = omega**2 * rg[0]
+    b[4,0] = omega**2 * rg[1]
 
-    b[3,0] = mass*gravity[1]
+
     
     print b
 
     soln  = np.linalg.solve(Amat, b)
     print soln
+    print np.dot(Amat,soln)
+
+
     gforce = [comp*bodies[0].mass for comp in gravity] 
     bodies[0].addForce(gforce, (0.0,0.0))
     bodies[0].addForce(tuple(soln[3:]), r)
@@ -147,11 +153,11 @@ def idleFunc():
 
 def setupObjects():
     global bodies, stencilMat
-    x = RigidBody(mass, (10.0,30.0),  shape=size, theta=initAngle)
+    x = RigidBody(mass, initPosition, shape=size, theta=initAngle)
     bodies = [x]
-    stencilMat[2, 0] = x.mass
-    stencilMat[3,1] = x.mass
-    stencilMat[4,2] = -x.I
+    stencilMat[0, 0] = x.mass
+    stencilMat[1,1] = x.mass
+    stencilMat[2,2] = x.I
     print stencilMat
 
 
