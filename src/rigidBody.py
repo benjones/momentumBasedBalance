@@ -112,6 +112,7 @@ class RigidBody:
         #print "Point accelerating: %s" % pointAccel
 
     def draw(self, scale = None):
+        print "drawing"
         glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
 

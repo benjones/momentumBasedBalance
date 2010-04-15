@@ -28,67 +28,93 @@ simulationTime = time.time()
 #constraint
 
 size1 = (2.0, 1.0)
-size2 = (2.0, 1.0)
 mass1 = 3.0
+
+size2 = (2.0, 1.0)
 mass2 = 1.0
+
+
+r1 = [-size1[0]/2.0, -size1[1]/2.0]
+r2 = [size1[0]/2.0, -size1[1]/2.0]
+r3 = [size1[0]/2.0, size1[1]/2.0]
+r4 = [-size2[0]/2.0, 0]
+
+initialPosition1 = (4.0, size1[1]/2.0)
 initAngle = 45.0
-r1 = (-size1[0]/2.0, -size1[1]/2.0)
-r2 = (size1[0]/2.0, -size1[1]/2.0)
-r3 = (size1[0]/2.0, size1[1]/2.0)
-r4 = (-size2[0]/2.0, 0)#local vector, global computed each step
+initialPosition2 = (initialPosition1[0] + size1[0]/2.0 +
+                    .5*size2[0]*math.cos(radians(initAngle)),
+                    initialPosition1[1] + size1[1]/2.0 +
+                    .5*size2[0]*math.sin(radians(initAngle))
+                    )
+
+
+#r = (-size[0]/2.0, -size[1]/2.0)#local vector, global computed each step
 
 gravity = (0, -9.81)
 
 stencilMat = np.matrix([
-        [0,0,0,1,0,1,0,1,0],
-        [0,0,0,0,1,0,1,0,1],
-        [0,0,0,0,0,0,0,0,0],
-        [1,0,0,0,0,0,0,0,0],
-        [0,1,0,0,0,0,0,0,0],
-        [mass2,0,0,0,0,0,0,1,0],
-        [0,mass2,0,0,0,0,0,0,1],
-        [0,0,0,0,0,0,0,0,0]])
+        [0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0],
+        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+])
+
+def rotate(vec, theta):
+    return [vec[0]*math.cos(radians(theta)) -
+            vec[1]*math.sin(radians(theta)),
+            vec[0]*math.sin(radians(theta)) +
+            vec[1]*math.cos(radians(theta))]
 
 def computeForces():
-    global bodies, r1, r2, r3, r4, gravity, stencilMat
+    global bodies, r, gravity, stencilMat
     bodies[0].clearForces()
     bodies[1].clearForces()
-    
 
     #rotate r4 to global frame:
-    r4g = [r4[0]*math.cos(radians(bodies[1].theta)) -
-           r4[1]*math.sin(radians(bodies[1].theta)),
-           r4[0]*math.sin(radians(bodies[1].theta)) +
-           r4[1]*math.cos(radians(bodies[1].theta))]
-    
+    r1g = rotate(r1, bodies[0].theta)
+    r2g = rotate(r2, bodies[0].theta)
+    r3g = rotate(r3, bodies[0].theta)
+    r4g = rotate(r4, bodies[1].theta)
+
     Amat = np.copy(stencilMat)
+    Amat[2, 3] = -r1g[1]
+    Amat[2, 4] = r1g[0]
+    Amat[2, 5] = -r2g[1]
+    Amat[2,6] = r2g[0]
+    Amat[2,7] = -r3g[1]
+    Amat[2,8] = r3g[0]
     
-    Amat[2, 3:] =  np.array([[-r1[1], r1[0], -r2[1], r2[0], -r3[1], r3[0]]])
-    
-    Amat[3, 2] = -r4g[1]
-    Amat[4,2] = r4g[0]
-    
-    Amat[7, 7:] = np.array([[r4g[1], -r4g[0]]])
+    Amat[5, 7] = -r4g[1]
+    Amat[5, 8] = r4g[0]
+    Amat[6, 2] = -r4g[1]
+    Amat[7, 2] = r4g[0]
+
     print Amat
     b = np.zeros((8,1))
+
+    omega = bodies[1].L/bodies[1].I
+    
+
     b[1,0] = -mass1*gravity[1]
-    b[6,0] = mass2*gravity[1]
+    b[4, 0] = mass2*gravity[1]
+    b[6, 0] = omega**2 * r4g[0]
+    b[7,0] = omega**2 * r4g[1]
     
-    print b
+    soln, garbage1, garbage2, garbage3  = np.linalg.lstsq(Amat, b)
+    print soln
 
-    soln, res, rank, sv = np.linalg.lstsq(Amat, b)
-
-    bodies[0].addForce(gravity, (0.0,0.0))
-    bodies[1].addForce(gravity, (0.0,0.0))
-    print soln, rank
-    #print soln[3:5]
-    print Amat*np.matrix(soln)
-    bodies[0].addForce(tuple(soln[3:5,0]), r1)
-    bodies[0].addForce(tuple(soln[5:7,0]), r2)
-    bodies[0].addForce(tuple(soln[7:]), r3)
-    
-    bodies[1].addForce((-soln[7,0], -soln[8,0]), r4)
-
+    gforce1 = [comp*bodies[0].mass for comp in gravity] 
+    bodies[0].addForce(gforce1, (0.0,0.0))
+    bodies[0].addForce(soln[3:5], r1)
+    bodies[0].addForce(soln[5:7], r2)
+    bodies[0].addForce(soln[7:9], r3) 
+    gforce2 = [comp*bodies[1].mass for comp in gravity] 
+    bodies[1].addForce(gforce2, (0.0,0.0))
+    bodies[1].addForce((-soln[7, 0], -soln[8,0]), r4)
 def keyCallback(key, x, y):
     global paused, ESCAPE_KEY
     if key == ESCAPE_KEY:
@@ -99,6 +125,7 @@ def keyCallback(key, x, y):
         setupObjects()
 def draw():
     global bodies, worldSize
+    print "Draw callback"
     glClear(GL_COLOR_BUFFER_BIT)
     glColor(0.,1.,0.)
     glBegin(GL_LINES)
@@ -130,10 +157,10 @@ def idleFunc():
     #print stepsPerFrame
     while frames < stepsPerFrame:
         computeForces()
-
         for body in bodies:
         
             if not body.grounded and body.getBottom() <= 0.:
+                print "Bottomed out"
                 #glutPostRedisplay()
                 return
             body.step(dt)
@@ -143,18 +170,20 @@ def idleFunc():
     while delta < 1.0/displayFramerate:
         time.sleep(delta)
         delta = time.time() - simulationTime
-
+    print "about to redisplay"
     glutPostRedisplay()
-
+    
 def setupObjects():
     global bodies, stencilMat
-    x = RigidBody(3.0, (3.0,size1[1]/2.0),  shape=size1)
+    x = RigidBody(mass1, initialPosition1, shape=size1)
     x.grounded = True
-    ypos = [ x.pos[0] + x.shape[0]/2.0 + size2[0]*math.cos(radians(initAngle))/2.0,
-             x.pos[1] + x.shape[1]/2.0 + size2[0]*math.sin(radians(initAngle))/2.0]
-    y = RigidBody(1.0,  ypos, theta=initAngle, shape=size2)
+    y = RigidBody(mass2, initialPosition2, theta=initAngle, shape=size2)
+    y.grounded = True
     bodies = [x, y]
-    stencilMat[7, 2] = -y.I
+    stencilMat[3,0] = y.mass
+    stencilMat[4,1] = y.mass
+    stencilMat[5,2] = y.I
+
     print stencilMat
 
 
