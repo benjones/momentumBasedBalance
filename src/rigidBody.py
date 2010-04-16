@@ -35,6 +35,9 @@ class RigidBody:
         self.forces.append((f, pos))
         #t = r x f
 
+    def addTorque(self, tau):
+        self.torques.append(tau)
+
     def getBottom(self):
         corners = ((self.shape[0]/2., self.shape[1]/2.),
                    (self.shape[0]/2., -self.shape[1]/2.),
@@ -69,16 +72,13 @@ class RigidBody:
                 force[1][0]*math.sin(radians(self.theta)) + 
                 force[1][1]*math.cos(radians(self.theta))
                 ]
-            #print "newVec: ", newVec
             #now compute cross product with newVec
             ldot += newVec[0]*force[0][1] - newVec[1]*force[0][0]
-            #print ("Computed torque is: ", newVec[0]*force[0][1] - newVec[1]*force[0][0])
-
+        #sum pure torques
+        for torque in self.torques:
+            ldot += torque
         #just do euler integration
-        '''print "Total force/m: (%s, %s)" %  (pdot[0]/self.mass,
-                                          pdot[1]/self.mass)
-        print "Old omega: ", self.L/self.I
-        oldOmega = self.L/self.I'''
+
         self.pos[0] += posDot[0]*dt
         self.pos[1] += posDot[1]*dt
         
@@ -89,30 +89,8 @@ class RigidBody:
 
         self.L += ldot*dt
 
-        #print "ldot*dt: ", ldot*dt
-        #rvec = [-math.cos(radians(self.theta)) + .5*math.sin(radians(self.theta)),
-        #        -math.sin(radians(self.theta)) - .5*math.cos(radians(self.theta))]
-
-        #print "rvec: ", rvec
-        #print "Computed alpha: ", ldot/self.I
-        #omega = self.L/self.I
-        #print "New omega: ", omega
-        #a = [pdot[0]/self.mass, pdot[1]/self.mass]
-        #print "Computed a: ", a
-        #alpha = ldot/self.I
-        #print "Computed alpha: ", alpha
-
-        #print -alpha*rvec[1], -(oldOmega**2) * rvec[0]
-        #print -alpha*rvec[0], -(oldOmega**2) * rvec[1]
-        #pointAccel = [
-        #    a[0] - alpha*rvec[1] - (oldOmega**2) * rvec[0],
-        #    a[1] + alpha*rvec[0] - (oldOmega**2) * rvec[1]
-        #    ]
-        #print a, alpha, omega, rvec
-        #print "Point accelerating: %s" % pointAccel
 
     def draw(self, scale = None):
-        print "drawing"
         glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
 
