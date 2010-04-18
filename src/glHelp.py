@@ -59,4 +59,4 @@ def drawArrow(magnitude, position, scale):
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 
     glPopMatrix()
-    print("Drew arrow")
+    

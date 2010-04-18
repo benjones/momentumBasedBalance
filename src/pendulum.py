@@ -18,7 +18,7 @@ windowSize = (800, 800)
 worldSize = (10.0, 10.0)
 
 displayFramerate = 60.0 #fps
-simulationFramerate = 600.0 #fps
+simulationFramerate = 1200.0 #fps
 
 stepsPerFrame = float(simulationFramerate)/displayFramerate
 
@@ -112,7 +112,7 @@ def draw():
     glColor(0,0,1)
     for body in bodies:
         body.draw(.1)
-        print body
+        #print body
         '''y = body.getBottom()
         glBegin(GL_LINES)
         glVertex(0., y)
