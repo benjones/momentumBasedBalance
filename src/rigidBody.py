@@ -10,6 +10,13 @@ def radians(degrees):
 def degrees(radians):
     return radians * 180.0/math.pi
 
+def rotate(vec, theta):
+    return [vec[0]*math.cos(radians(theta)) -
+            vec[1]*math.sin(radians(theta)),
+            vec[0]*math.sin(radians(theta)) +
+            vec[1]*math.cos(radians(theta))]
+    
+
 class RigidBody:
 
 
