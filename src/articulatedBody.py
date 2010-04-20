@@ -144,7 +144,7 @@ class ArticulatedBody:
             #add entries to soln matrix
             omega = body.L/body.I
             solVector[pinoffset + pin*2, 0] = -omega**2*rvec[0]
-            solVector[pinoffset + pin*2 +1, 0] - -omega**2*rvec[1]
+            solVector[pinoffset + pin*2 +1, 0] = -omega**2*rvec[1]
 
         for force in self.externalForces:
             solVector[force[0]*3] += force[1][0][0]
@@ -155,7 +155,6 @@ class ArticulatedBody:
 
             #apply them to the bodies
             self.bodies[force[0]].addForce(*force[1])
-            
 
         #print "Step:", self.matrix, solVector
         soln = np.linalg.solve(self.matrix, solVector)
@@ -174,6 +173,9 @@ class ArticulatedBody:
                 f, self.pins[pin][1])
         for body in self.bodies:
             body.step(dt)
+
+        #print self.matrix, solVector, soln
+
     def draw(self, scale = 1.0):
         for body in self.bodies:
             body.draw(scale)

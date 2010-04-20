@@ -29,7 +29,7 @@ simulationTime = time.time()
 #constraint
 
 size1 = (1.0, 5.0)
-mass1 = 3.0
+mass1 = .5
 
 size2 = (2.0, 3.0)
 mass2 = 1.0
@@ -69,7 +69,6 @@ def keyCallback(key, x, y):
         setupObjects()
 def draw():
     global arb, worldSize
-    print "Draw callback"
     glClear(GL_COLOR_BUFFER_BIT)
     glColor(0.,1.,0.)
     glBegin(GL_LINES)
@@ -100,7 +99,6 @@ def idleFunc():
     while delta < 1.0/displayFramerate:
         time.sleep(delta)
         delta = time.time() - simulationTime
-    print "about to redisplay"
     glutPostRedisplay()
     
 def setupObjects():
