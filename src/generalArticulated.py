@@ -9,6 +9,8 @@ import glHelp
 import math
 import numpy as np
 
+from collections import deque
+
 from rigidBody import RigidBody, radians
 from articulatedBody import ArticulatedBody
 
@@ -25,6 +27,8 @@ stepsPerFrame = float(simulationFramerate)/displayFramerate
 
 simulationTime = time.time()
 
+mouseAccel = (0.0,0.0)
+currentMousePos = (0,0)
 #two blocks, one fixed to the ground, with one point-point
 #constraint
 
@@ -33,7 +37,6 @@ mass1 = .5
 
 size2 = (2.0, 3.0)
 mass2 = 1.0
-
 
 r1 = [0, -size1[1]/2.0]
 r2 = [0, size1[1]/2.0]
@@ -67,6 +70,60 @@ def keyCallback(key, x, y):
         paused = not paused
     elif key == 'r':
         setupObjects()
+
+def mouseMove(x, y):
+    global mouseDown, mousePoints, mouseAccel
+    if mouseDown:
+        curTime = time.time()
+        if len(mousePoints) and curTime - mousePoints[0][2] >= .01:
+            mousePoints.appendleft([x, y, time.time()])
+            while len(mousePoints) > 3:
+                mousePoints.pop()
+            print "mousepoints"
+            for i in mousePoints:
+                print i
+            if len(mousePoints) == 3:
+                dt1 = mousePoints[0][2] - mousePoints[1][2]
+                dt2 = mousePoints[1][2] - mousePoints[2][2]
+                dt3 = mousePoints[0][2] - mousePoints[2][2]
+                
+                dx1 = mousePoints[0][0] - mousePoints[1][0]
+                dy1 = mousePoints[0][1] - mousePoints[1][1]
+                
+                dx2 = mousePoints[1][0] - mousePoints[2][0]
+                dy2 = mousePoints[1][1] - mousePoints[2][1]
+                print "dxs, dys:", dx1, dx2, dy1, dy2
+                print "dts:", dt1, dt2, dt3
+                v1x = dx1/dt1
+                v1y = dy1/dt1
+                
+                v2x = dx2/dt2
+                v2y = dy2/dt2
+                print "velocities:", v1x, v1y, v2x, v2y
+                ax = (v1x - v2x)/dt3
+                ay = (v1y - v2y)/dt3
+                        
+                print("Computed accel:", ax, ay)
+                scaledAccel = (ax*worldSize[0]/windowSize[0], 
+                               ay*worldSize[1]/windowSize[1])
+                print "Scaled accel:", scaledAccel
+                mouseAccel = scaledAccel
+def mouseClick(button, state, x, y):
+    global mouseDown, mousePoints, mouseAccel
+    if button == GLUT_LEFT_BUTTON:
+        if state == GLUT_DOWN:
+            print "clicked"
+            mouseDown = True
+            mousePoints = deque([[x,y, time.time()]])
+            mouseAccel = (0.0, 0,0)
+
+        else:
+            print "released"
+            mouseDown = False
+            mouseAccel = (0.0, 0.0)
+            mousePoints = deque([])
+
+
 def draw():
     global arb, worldSize
     glClear(GL_COLOR_BUFFER_BIT)
@@ -84,12 +141,13 @@ def draw():
 
 dt = 1.0/simulationFramerate
 def idleFunc():
-    global frames, dt, paused, simulationTime, arb
+    global frames, dt, paused, simulationTime, arb, mouseAccel
     if paused:
         time.sleep(.1)
         return
     frames = 0
     simulationTime = time.time()
+    arb.updateAccel(0, mouseAccel)
     #print stepsPerFrame
     while frames < stepsPerFrame:
         arb.step(dt)
@@ -126,6 +184,8 @@ glHelp.setupGL(windowSize, worldSize, draw)
 
 glutIdleFunc(idleFunc)
 glutKeyboardFunc(keyCallback)
+glutMouseFunc(mouseClick)
+glutMotionFunc(mouseMove)
 
 setupObjects()
 glutMainLoop()

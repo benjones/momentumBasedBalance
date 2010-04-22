@@ -21,14 +21,18 @@ class ArticulatedBody:
         '''
         self.constraints.append(constraint)
 
-    def add1BodyConstraint(self, constraint):
+    def add1BodyConstraint(self, constraint, accel = (0.0,0.0)):
         'pin of the form (index, rvector)'
-        self.pins.append(constraint)
+        self.pins.append([constraint, accel])
+        return len(self.pins) -1
 
     def addExternalForce(self, body, force):
         'force is of the form ((fx, fy), (rx, ry))'
         self.externalForces.append((body, force))
         
+
+    def updateAccel(self, pin, accel):
+        self.pins[pin][1] = accel
 
 
     def finalize(self):
@@ -75,14 +79,14 @@ class ArticulatedBody:
 
         pinoffset = 3*len(self.bodies) + 2*len(self.constraints)
         for pin in range(len(self.pins)):
-            self.matrix[3*self.pins[pin][0],
+            self.matrix[3*self.pins[pin][0][0],
                         pinoffset + 2*pin] = -1
-            self.matrix[3*self.pins[pin][0] + 1,
+            self.matrix[3*self.pins[pin][0][0] + 1,
                         pinoffset + 2*pin +1] = -1
             self.matrix[pinoffset +2*pin,
-                        3*self.pins[pin][0]] = -1
+                        3*self.pins[pin][0][0]] = -1
             self.matrix[pinoffset + 2*pin +1,
-                        3*self.pins[pin][0] +1] = -1
+                        3*self.pins[pin][0][0] +1] = -1
 
     def step(self, dt):
         for body in self.bodies:
@@ -130,21 +134,23 @@ class ArticulatedBody:
 
         pinoffset = constraintOffset + 2*len(self.constraints)
         for pin in range(len(self.pins)):
-            body = self.bodies[self.pins[pin][0]]
-            rvec = rotate(self.pins[pin][1], body.theta)
-            self.matrix[3*self.pins[pin][0] + 2,
+            body = self.bodies[self.pins[pin][0][0]]
+            rvec = rotate(self.pins[pin][0][1], body.theta)
+            self.matrix[3*self.pins[pin][0][0] + 2,
                         pinoffset + pin*2] = rvec[1]
-            self.matrix[3*self.pins[pin][0] + 2,
+            self.matrix[3*self.pins[pin][0][0] + 2,
                         pinoffset + pin*2 + 1] = -rvec[0]
             self.matrix[pinoffset + pin*2,
-                        3*self.pins[pin][0] +2] = rvec[1]
+                        3*self.pins[pin][0][0] +2] = rvec[1]
             self.matrix[pinoffset + pin*2 +1,
-                        3*self.pins[pin][0] +2] = -rvec[0]
+                        3*self.pins[pin][0][0] +2] = -rvec[0]
         
             #add entries to soln matrix
             omega = body.L/body.I
-            solVector[pinoffset + pin*2, 0] = -omega**2*rvec[0]
-            solVector[pinoffset + pin*2 +1, 0] = -omega**2*rvec[1]
+            solVector[pinoffset + pin*2, 0] = -omega**2*rvec[0] - self.pins[
+                pin][1][0]
+            solVector[pinoffset+ pin*2 +1,0] = -omega**2*rvec[1] - self.pins[
+                pin][1][1]
 
         for force in self.externalForces:
             solVector[force[0]*3] += force[1][0][0]
@@ -169,8 +175,8 @@ class ArticulatedBody:
         for pin in range(len(self.pins)):
             start = pinoffset + 2*pin
             f = tuple(soln[start: start+2, 0])
-            self.bodies[self.pins[pin][0]].addForce(
-                f, self.pins[pin][1])
+            self.bodies[self.pins[pin][0][0]].addForce(
+                f, self.pins[pin][0][1])
         for body in self.bodies:
             body.step(dt)
 
