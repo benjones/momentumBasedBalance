@@ -34,7 +34,6 @@ class ArticulatedBody:
     def updateAccel(self, pin, accel):
         self.pins[pin][1] = accel
 
-
     def finalize(self):
         'Once all the bodies/constraints are listed, create matrix'
         self.matsize = 3*len(self.bodies) + 2*len(self.constraints) + 2*len(self.pins)
@@ -147,6 +146,7 @@ class ArticulatedBody:
         
             #add entries to soln matrix
             omega = body.L/body.I
+
             solVector[pinoffset + pin*2, 0] = -omega**2*rvec[0] - self.pins[
                 pin][1][0]
             solVector[pinoffset+ pin*2 +1,0] = -omega**2*rvec[1] - self.pins[
@@ -180,7 +180,7 @@ class ArticulatedBody:
         for body in self.bodies:
             body.step(dt)
 
-        #print self.matrix, solVector, soln
+
 
     def draw(self, scale = 1.0):
         for body in self.bodies:

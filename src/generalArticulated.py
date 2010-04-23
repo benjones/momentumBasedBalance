@@ -21,14 +21,12 @@ windowSize = (800, 800)
 worldSize = (20.0, 20.0)
 
 displayFramerate = 60.0 #fps
-simulationFramerate = 600.0 #fps
+simulationFramerate = 300.0 #fps
 
 stepsPerFrame = float(simulationFramerate)/displayFramerate
 
 simulationTime = time.time()
 
-mouseAccel = (0.0,0.0)
-currentMousePos = (0,0)
 #two blocks, one fixed to the ground, with one point-point
 #constraint
 
@@ -54,6 +52,8 @@ actuationTorque = 0.0
 
 gravity = (0, -9.81)
 
+motionRadius = 1.0
+motionFrequency = 2*math.pi/5.0
 
 def rotate(vec, theta):
     return [vec[0]*math.cos(radians(theta)) -
@@ -147,11 +147,20 @@ def idleFunc():
         return
     frames = 0
     simulationTime = time.time()
-    arb.updateAccel(0, mouseAccel)
+    motionTime = simulationTime
     #print stepsPerFrame
     while frames < stepsPerFrame:
+        
+        '''accel = (-motionRadius*motionFrequency**2*math.cos(
+                motionFrequency *(motionTime)),
+                 -motionRadius*motionFrequency**2*math.sin(
+                motionFrequency *motionTime)
+                 )
+        print accel
+        arb.updateAccel(0, accel)'''
         arb.step(dt)
         frames += 1
+        motionTime += dt
     #wait until its time to update
     delta = time.time() - simulationTime
     while delta < 1.0/displayFramerate:
@@ -184,8 +193,8 @@ glHelp.setupGL(windowSize, worldSize, draw)
 
 glutIdleFunc(idleFunc)
 glutKeyboardFunc(keyCallback)
-glutMouseFunc(mouseClick)
-glutMotionFunc(mouseMove)
+#glutMouseFunc(mouseClick)
+#glutMotionFunc(mouseMove)
 
 setupObjects()
 glutMainLoop()
